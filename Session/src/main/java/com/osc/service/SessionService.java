@@ -20,8 +20,7 @@ import java.util.UUID;
 @GrpcService
 public class SessionService extends SessionServiceGrpc.SessionServiceImplBase {
     private static final String INPUT_OUTPUT_TOPIC = "SessionData";
-    @Autowired
-    private KafkaTemplate<String,String> kafkaTemplate;
+
 
     private final KafkaStreams streams;
 
@@ -104,7 +103,6 @@ public class SessionService extends SessionServiceGrpc.SessionServiceImplBase {
 
     public void logout(SessionData request, StreamObserver<SessionDataResponse> responseObserver) {
         String email = request.getEmail();
-        this.kafkaTemplate.send("data",email);
         System.out.println(email);
         produceMessage(INPUT_OUTPUT_TOPIC,email,false);
         SessionDataResponse response = SessionDataResponse.newBuilder().setResponse(true).build();

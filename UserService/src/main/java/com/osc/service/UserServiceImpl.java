@@ -58,6 +58,9 @@ public class UserServiceImpl extends UserDashBoardDetails implements UserService
 
     UserDataResponse response;
 
+    @Autowired
+    private KafkaTemplate<String,String> template;
+
     @Override
     public boolean createUser(UserInformation user) {
             if (checkUserExits(user.getEmail())) {
@@ -197,10 +200,12 @@ public class UserServiceImpl extends UserDashBoardDetails implements UserService
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNode = mapper.readTree(userId);
-            String user = jsonNode.get("userId").asText();
+            String user =  jsonNode.get("userId").asText().replaceAll("^\"|\"$", "");
+            System.out.println("User"+user);
+            System.out.println(userId);
             int atIndex = user.indexOf('@');
             String result = atIndex != -1 ? user.substring(0, atIndex) : user;
-            String id = result + "Web";
+            String id = result+"Web";
 
             //Created a GRPC call to Session Service to provide the User+loginDevice data and checking for the response
             SessionData request = SessionData.newBuilder().setEmail(id).build();
@@ -214,6 +219,7 @@ public class UserServiceImpl extends UserDashBoardDetails implements UserService
                 session.setLogoutTime(timeout);
                 sessionRepository.save(session);
                 Code responseCode = new Code(200);
+                this.template.send("data",user);
                 return ResponseEntity.ok(responseCode);
             } else {
                 Code responseCode = new Code(0);

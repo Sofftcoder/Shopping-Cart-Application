@@ -43,7 +43,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
     private SessionServiceGrpc.SessionServiceBlockingStub sessionServiceGrpc;
 
     private HazelcastInstance hazelcastInstance = HazelcastClient.newHazelcastClient();
-    private ISet<String> distributedSet = hazelcastInstance.getSet("User Data");
+    public ISet<String> distributedSet = hazelcastInstance.getSet("User Data");
 
     private WebSocketSession currentSession;
     private Instant lastMessageTime;
