@@ -14,7 +14,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExistingUserDashboardData {
     @JsonProperty("Recently Viewed Products")
-    private List<Products> RecentlyViewedProducts;
+    private List<ProductsData> recentlyViewedProducts;
     @JsonProperty("Categories")
     private List<Categories> Categories;
     @JsonProperty("TYPE")
@@ -22,5 +22,5 @@ public class ExistingUserDashboardData {
     @JsonProperty("Cart")
     private Cart CART;
     @JsonProperty("Similar Products")
-    private List<Products> SimilarProducts;
+    private List<ProductsData> similarProducts;
 }

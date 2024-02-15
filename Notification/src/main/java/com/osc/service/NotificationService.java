@@ -9,16 +9,13 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-
 import java.util.Random;
 
 @GrpcService
 public class NotificationService extends NotificationServiceGrpc.NotificationServiceImplBase
-        {
-
+{
     @Autowired
     private JavaMailSender mailSender;
-
     int max=999999,min=100000;
     Random random = new Random();
     String random_int = String.valueOf(random.nextInt(max-min+1)+min);
@@ -28,7 +25,6 @@ public class NotificationService extends NotificationServiceGrpc.NotificationSer
     int count = 1;
 
     public void sendMail(String email) {
-        System.out.println(random_int);
         this.userId = email;
         otp = random_int;
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
@@ -71,9 +67,7 @@ public class NotificationService extends NotificationServiceGrpc.NotificationSer
                     responseObserver.onNext(response);
                     responseObserver.onCompleted();
                 }
-
             }
-
     }
 
     public void welcomeMessage(String name,String email){
@@ -84,6 +78,7 @@ public class NotificationService extends NotificationServiceGrpc.NotificationSer
         simpleMailMessage.setText("Hello "+ name + "\nWelcome to OroSoft, your gateway to tailored ERP solutions for the Precious Metals Industry. With over 13 years of expertise, we're here to enhance your business performance and profitability through customized software solutions. Let's embark on a journey of success together!");
         this.mailSender.send(simpleMailMessage);
     }
+
     @Override
     public void forgotPassword(EmailNotification request, StreamObserver<NotificationResponse> responseObserver) {
         random = new Random();

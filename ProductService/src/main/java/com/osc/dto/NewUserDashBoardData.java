@@ -12,9 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 public class NewUserDashBoardData {
     @JsonProperty("Featured Products")
-    private List<com.osc.dto.Products> FeaturedProducts;
+    private List<ProductsData> featuredProducts;
     @JsonProperty("Categories")
-    private List<com.osc.dto.Categories> Categories;
+    private List<CategoriesData> CategoriesData;
     @JsonProperty("TYPE")
     private String TYPE;
 }

@@ -55,6 +55,7 @@ message ProductDataResponse{
 }
 
 service ProductService{
-    rpc getProductData(ProductData) returns (ProductDataResponse);
+    rpc getDashBoardData(ProductData) returns (ProductDataResponse);
     rpc socketQuery(SocketRequest) returns (SocketResponse);
+    rpc onRefreshProductData(ProductData) returns (ProductDataResponse);
 }

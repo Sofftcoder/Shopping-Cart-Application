@@ -1,7 +1,5 @@
 package com.osc.dto;
 
-import com.osc.dto.DataObject;
-
 public class Data {
     private int code;
     private Session1 dataObject;

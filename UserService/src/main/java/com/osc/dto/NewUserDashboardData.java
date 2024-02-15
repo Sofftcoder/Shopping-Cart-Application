@@ -14,9 +14,9 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class NewUserDashboardData {
     @JsonProperty("Featured Products")
-    private List<Products> FeaturedProducts;
+    private List<ProductsData> featuredProducts;
     @JsonProperty("Categories")
-    private List<Categories> Categories;
+    private List<CategoriesData> CategoriesData;
     @JsonProperty("TYPE")
     private String TYPE;
 }

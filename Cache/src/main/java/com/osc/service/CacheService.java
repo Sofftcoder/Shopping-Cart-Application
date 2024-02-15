@@ -1,10 +1,6 @@
 package com.osc.service;
 
 import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.JoinConfig;
-import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.osc.cache.*;
@@ -37,11 +33,6 @@ public class CacheService extends CacheServiceGrpc.CacheServiceImplBase{
         data.add(dob);
 
         map.put(email,data);
-        List<String> value = map.get(email);
-        for(String s : value){
-            System.out.println(s);
-        }
-
     }
 
     @Override
@@ -51,6 +42,7 @@ public class CacheService extends CacheServiceGrpc.CacheServiceImplBase{
         if(map.containsKey(email)){
             List<String> data = map.get(email);
              response = UserDataResponse.newBuilder().setName(data.get(0)).setContact(data.get(1)).setDob(data.get(2)).build();
+             map.remove(email);
         }
         else{
              response = UserDataResponse.newBuilder().build();

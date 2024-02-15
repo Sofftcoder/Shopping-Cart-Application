@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jmx.export.naming.IdentityNamingStrategy;
 import org.springframework.kafka.annotation.KafkaListener;
 
+import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -21,10 +22,18 @@ public class KafkaConfig {
 
 
     @KafkaListener(topics = AppConstants.TOPIC, groupId = AppConstants.GROUP_ID)
-    public void notification(Map<String,String> data){
-            String name = data.get("name");
-            String email = data.get("email");
-            notificationService.sendMail(email);
-            notificationService.welcomeMessage(name, email);
+    public void notification(String data){
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String,String> userDetail = null;
+        try {
+            userDetail = objectMapper.readValue(data, new TypeReference<Map<String, String>>() {
+            });
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        String name = userDetail.get("name");
+        String email = userDetail.get("email");
+        notificationService.sendMail(email);
+        notificationService.welcomeMessage(name, email);
     }
 }

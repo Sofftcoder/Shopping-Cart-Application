@@ -3,9 +3,8 @@ package com.osc.webSocket;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.collection.ISet;
+import com.hazelcast.collection.IList;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.org.json.JSONObject;
 import com.osc.entity.Session;
 import com.osc.product.ProductServiceGrpc;
 import com.osc.product.SocketRequest;
@@ -17,6 +16,7 @@ import com.osc.session.SessionDataResponse;
 import com.osc.session.SessionServiceGrpc;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -42,8 +42,11 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
     @GrpcClient("Session")
     private SessionServiceGrpc.SessionServiceBlockingStub sessionServiceGrpc;
 
+    @Autowired
+    private KafkaTemplate<String, String> template;
+
     private HazelcastInstance hazelcastInstance = HazelcastClient.newHazelcastClient();
-    public ISet<String> distributedSet = hazelcastInstance.getSet("User Data");
+    IList<String> distributedList = hazelcastInstance.getList("User Data");
 
     private WebSocketSession currentSession;
     private Instant lastMessageTime;
@@ -80,7 +83,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
                 closeSession();
             }if (secondsSinceLastMessage >= 120) {
                 System.out.println("Performing actions for 120s inactivity");
-                String userId = distributedSet.iterator().next();
+                String userId = distributedList.iterator().next();
                 System.out.println(userId);
                 SessionData request = SessionData.newBuilder().setEmail(userId).build();
                 SessionDataResponse response = sessionServiceGrpc.logout(request);
@@ -91,8 +94,8 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
                 String logouttime = formatter.format(localDateTime);
                 session1.setLogoutTime(logouttime);
                 sessionRepository.save(session1);
+                this.template.send("data", userId);
                 System.out.println("session closed");
-                hazelcastInstance.shutdown();
             }
         }
     }
@@ -123,20 +126,24 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(message.getPayload());
         String payload = message.getPayload();
-        JSONObject existingData = new JSONObject(payload);
         if (!payload.isEmpty() && "ping".equals(jsonNode.get("MT").asText())) {
             System.out.println(payload);
             lastMessageTime = Instant.now();
             String jsonResponse = "{ \"message\": \"hello\" }";
             session.sendMessage(new TextMessage(jsonResponse));
-        } else if (!payload.isEmpty() && "2".equals(jsonNode.get("MT").asText()) && jsonNode.has("catId") && jsonNode.has("prodId")) {
+        }
+
+        else if (!payload.isEmpty() && "2".equals(jsonNode.get("MT").asText()) && jsonNode.has("catId") && jsonNode.has("prodId")) {
             String catId = jsonNode.get("catId").asText();
             String prodId = jsonNode.get("prodId").asText();
             String MT = jsonNode.get("MT").asText();
-            SocketRequest request = SocketRequest.newBuilder().setMT(MT).setCatId(catId).setProdId(prodId).build();
+            String userId = distributedList.iterator().next();
+            SocketRequest request = SocketRequest.newBuilder().setMT(MT).setCatId(catId).setProdId(prodId).setUserId(userId).build();
             SocketResponse response = this.productServiceGrpc.socketQuery(request);
             session.sendMessage(new TextMessage(response.getResponse()));
-        } else if (!payload.isEmpty() && "3".equals(jsonNode.get("MT").asText()) && jsonNode.has("catId") && jsonNode.has("filter")) {
+        }
+
+        else if (!payload.isEmpty() && "3".equals(jsonNode.get("MT").asText()) && jsonNode.has("catId") && jsonNode.has("filter")) {
             String catId = jsonNode.get("catId").asText();
             String filter = jsonNode.get("filter").asText();
             String MT = jsonNode.get("MT").asText();
@@ -144,6 +151,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
             SocketResponse response = this.productServiceGrpc.socketQuery(request);
             session.sendMessage(new TextMessage(response.getResponse()));
         }
+
         else if (!payload.isEmpty() && "9".equals(jsonNode.get("MT").asText()) && jsonNode.has("userId") && jsonNode.has("prodId")) {
             String userId = jsonNode.get("userId").asText();
             String prodId = jsonNode.get("prodId").asText();
@@ -151,6 +159,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
             SocketRequest request = SocketRequest.newBuilder().setMT(MT).setProdId(prodId).setUserId(userId).build();
             SocketResponse response = this.productServiceGrpc.socketQuery(request);
         }
+
         else if (!payload.isEmpty() && "6".equals(jsonNode.get("MT").asText()) && jsonNode.has("userId")){
             String userId = jsonNode.get("userId").asText();
             String MT = jsonNode.get("MT").asText();
@@ -158,6 +167,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
             SocketResponse response = this.productServiceGrpc.socketQuery(request);
             session.sendMessage(new TextMessage(response.getResponse()));
         }
+
         else if (!payload.isEmpty() && "8".equals(jsonNode.get("MT").asText()) && jsonNode.has("userId") && jsonNode.has("prodId")){
             String userId = jsonNode.get("userId").asText();
             String prodId = jsonNode.get("prodId").asText();
@@ -165,6 +175,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
             SocketRequest request = SocketRequest.newBuilder().setMT(MT).setUserId(userId).setProdId(prodId).build();
             SocketResponse response = this.productServiceGrpc.socketQuery(request);
         }
+
         else if (!payload.isEmpty() && "10".equals(jsonNode.get("MT").asText()) && jsonNode.has("userId") && jsonNode.has("prodId")){
             String userId = jsonNode.get("userId").asText();
             String prodId = jsonNode.get("prodId").asText();
@@ -172,17 +183,18 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
             SocketRequest request = SocketRequest.newBuilder().setMT(MT).setUserId(userId).setProdId(prodId).build();
             SocketResponse response = this.productServiceGrpc.socketQuery(request);
         }
-        else if (!payload.isEmpty() && "11".equals(jsonNode.get("MT").asText())){
-            String MT = jsonNode.get("MT").asText();
-            String userId = distributedSet.iterator().next();
-            userService.dashBoard(userId);
+
+        else if (!payload.isEmpty() && "11".equals(jsonNode.get("MT").asText())){;
+            String userId = distributedList.iterator().next();
+            objectMapper.writeValueAsString(userService.dashBoard(userId));
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(userService.dashBoard(userId))));
+
         }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        System.out.println("session end");
-        String userId = distributedSet.iterator().next();
+        String userId = distributedList.iterator().next();
         System.out.println(userId);
         SessionData request = SessionData.newBuilder().setEmail(userId).build();
         SessionDataResponse response = sessionServiceGrpc.logout(request);
@@ -193,7 +205,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
         String logouttime = formatter.format(localDateTime);
         session1.setLogoutTime(logouttime);
         sessionRepository.save(session1);
-        distributedSet.remove(userId);
+        distributedList.remove(userId);
         super.afterConnectionClosed(session, status);
     }
 

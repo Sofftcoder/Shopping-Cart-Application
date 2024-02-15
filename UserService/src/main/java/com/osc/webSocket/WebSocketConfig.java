@@ -1,6 +1,7 @@
 package com.osc.webSocket;
 
 import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.collection.IList;
 import com.hazelcast.collection.ISet;
 import com.hazelcast.core.HazelcastInstance;
 import com.osc.dto.Details;
@@ -34,8 +35,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private static class HttpHandshakeInterceptor implements HandshakeInterceptor {
 
         HazelcastInstance hazelcastInstance = HazelcastClient.newHazelcastClient();
-
-        ISet<String> distributedSet = hazelcastInstance.getSet("User Data");
+        IList<String> distributedList = hazelcastInstance.getList("User Data");
         Details data = new Details();
         @Override
         public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
@@ -48,7 +48,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 try {
                     data.setUserId(userId);
                     data.setLoginDevice(value[2]);
-                    distributedSet.add(userId);
+                    distributedList.add(userId);
                     response.getHeaders().add("sec-websocket-protocol", value[0]);
                     return true;
                 }

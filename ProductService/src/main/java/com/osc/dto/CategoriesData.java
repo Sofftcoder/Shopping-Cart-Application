@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ApiResponsse {
-    private int code;
-    private ListOfExistingDashboardData dataObject;
+public class CategoriesData {
+    private String CategoryId;
+    private String CategoryName;
 }

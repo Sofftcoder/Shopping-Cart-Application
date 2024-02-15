@@ -24,6 +24,6 @@ public interface UserService {
 
     ResponseEntity<Code> changePassword(Password password);
 
-    ResponseEntity<?> dashBoard(String userId);
+    ApiResponse dashBoard(String userId);
 
 }
