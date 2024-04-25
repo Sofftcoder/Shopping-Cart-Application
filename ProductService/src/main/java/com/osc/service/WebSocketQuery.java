@@ -33,7 +33,6 @@ public class WebSocketQuery extends ProductServiceGrpc.ProductServiceImplBase {
      * @param userId
      * @return User Data Present in Ktable.
      */
-    // name change
     public String getUserCartDataFromKTable(String userId) {
         KafkaStreams kafkaStreams = kafkaStreamsConfig.kafkaStreamObjectForCartData();
         ReadOnlyKeyValueStore<String, String> ketValueData = kafkaStreams.store(

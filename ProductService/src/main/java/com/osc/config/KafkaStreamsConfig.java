@@ -39,7 +39,6 @@ public class KafkaStreamsConfig{
 
         return new KafkaProducer<>(producerProperties);
     }
-
     @Bean
     public KafkaStreams kafkaStreamObjectForCartData() {
         StreamsBuilder builder = new StreamsBuilder();
